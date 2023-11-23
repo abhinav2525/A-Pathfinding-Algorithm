@@ -7,6 +7,7 @@ var start; // Spot object
 var end; // Spot object
 var w, h; // width and height of each spot
 var path = []; // array of Spots
+var noSolution = false;
 
 // remove element from array
 function removeElementFromArray(arr, element) {
@@ -37,9 +38,16 @@ class Spot {
     this.previous = undefined; // previous Spot object
     this.wall = false; // is it a wall?
 
+    if (random(1) < 0.3) {
+      this.wall = true;
+    }
+
     // show function
     this.show = function (color) {
       fill(color);
+      if (this.wall) {
+        fill(0);
+      }
       noStroke(0);
       rect(this.i * w, this.j * h, w - 1, h - 1); // -1 to see grid
     };
@@ -95,6 +103,8 @@ function setup() {
   // Start and end
   start = grid[0][0];
   end = grid[cols - 1][rows - 1];
+  start.wall = false;
+  end.wall = false;
 
   openSet.push(start);
   console.log(openSet);
@@ -114,6 +124,7 @@ function draw() {
     var current = openSet[lowestIndex];
 
     if (current === end) {
+      noLoop();
       console.log("DONE!");
     }
 
@@ -128,8 +139,8 @@ function draw() {
     // loop through neighbors
     for (var i = 0; i < neighbors.length; i++) {
       var neighbor = neighbors[i];
-      // check if neighbor is not in closedSet
-      if (!closedSet.includes(neighbor)) {
+      // check if neighbor is not in closedSet and is not a wall
+      if (!closedSet.includes(neighbor) && !neighbor.wall) {
         var tempG = current.g + 1;
         // check if neighbor is in openSet
         if (openSet.includes(neighbor)) {
@@ -152,6 +163,9 @@ function draw() {
     }
   } else {
     // no solution
+    console.log("No solution");
+    noSolution = true;
+    noLoop();
   }
   background(0);
 
@@ -170,17 +184,21 @@ function draw() {
     openSet[i].show(color(0, 255, 0)); // show open set
   }
 
-  // Find the path
-  path = [];
+  if (!noSolution) {
+    // Find the path
+    path = [];
 
-  var temp = current; // last spot
-  path.push(temp);
+    var temp = current; // last spot
+    path.push(temp);
 
-  // loop through previous
-  while (temp.previous) {
-    path.push(temp.previous);
-    temp = temp.previous;
+    // loop through previous
+    while (temp.previous) { // getting type error
+      path.push(temp.previous);
+      temp = temp.previous;
+    }
   }
+ 
+  // show path
   for (var i = 0; i < path.length; i++) {
     path[i].show(color(0, 0, 255)); // show path
   }
